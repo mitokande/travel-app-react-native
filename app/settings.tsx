@@ -17,8 +17,10 @@ import {
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
+import { RegionPickerModal } from '@/components/common/RegionPickerModal';
 import { targetRegions } from '@/data/countries';
 import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
+import { TargetRegion } from '@/types';
 
 interface SettingItemProps {
   icon: string;
@@ -65,8 +67,9 @@ function SettingItem({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { targetRegion, clearAllData } = useApp();
+  const { targetRegion, selectedCountryId, setTargetRegion, setSelectedCountry, clearAllData } = useApp();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   const currentRegion = targetRegions.find((r) => r.id === targetRegion);
 
@@ -74,8 +77,15 @@ export default function SettingsScreen() {
     router.back();
   };
 
-  const handleChangeRegion = () => {
-    router.push('/target-select');
+  const handleOpenRegionPicker = () => {
+    setShowRegionPicker(true);
+  };
+
+  const handleRegionSelect = async (region: TargetRegion) => {
+    await setTargetRegion(region);
+    // Reset selected country when changing region
+    await setSelectedCountry(null);
+    setShowRegionPicker(false);
   };
 
   const handleClearData = () => {
@@ -153,7 +163,12 @@ export default function SettingsScreen() {
               icon={currentRegion?.flag || '🌍'}
               title="Hedef Bölge"
               subtitle={currentRegion?.nameTr || 'Seçilmedi'}
-              onPress={handleChangeRegion}
+              onPress={handleOpenRegionPicker}
+              rightElement={
+                <View style={styles.changeButton}>
+                  <Text style={styles.changeButtonText}>Değiştir</Text>
+                </View>
+              }
             />
           </View>
         </Animated.View>
@@ -230,6 +245,15 @@ export default function SettingsScreen() {
           <Text style={styles.footerCopyright}>© 2026 Tüm hakları saklıdır</Text>
         </Animated.View>
       </ScrollView>
+
+      {/* Region Picker Modal */}
+      <RegionPickerModal
+        visible={showRegionPicker}
+        currentRegion={targetRegion}
+        onSelect={handleRegionSelect}
+        onClose={() => setShowRegionPicker(false)}
+        showWarning={!!selectedCountryId}
+      />
     </SafeAreaView>
   );
 }
@@ -387,6 +411,19 @@ const styles = StyleSheet.create({
   settingArrow: {
     fontSize: 22,
     color: AppColors.textMuted,
+  },
+
+  changeButton: {
+    backgroundColor: `${AppColors.skyBlue}15`,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.small,
+  },
+
+  changeButtonText: {
+    color: AppColors.skyBlue,
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   divider: {

@@ -38,6 +38,7 @@
 | Component | Status | File |
 |-----------|--------|------|
 | Button | Done | `components/common/Button.tsx` |
+| RegionPickerModal | Done | `components/common/RegionPickerModal.tsx` |
 | OnboardingSlide | Done | `components/onboarding/OnboardingSlide.tsx` |
 | ProgressCard | Done | `components/home/ProgressCard.tsx` |
 | NewsCard | Done | `components/home/NewsCard.tsx` |

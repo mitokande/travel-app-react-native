@@ -17,15 +17,17 @@ import {
 import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { CountryGrid } from '@/components/explore/CountryCard';
+import { RegionPickerModal } from '@/components/common/RegionPickerModal';
 import { useApp } from '@/context/AppContext';
 import { getCountriesByRegion, targetRegions } from '@/data/countries';
 import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
-import { Country } from '@/types';
+import { Country, TargetRegion } from '@/types';
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { targetRegion, selectedCountryId, setSelectedCountry } = useApp();
+  const { targetRegion, selectedCountryId, setTargetRegion, setSelectedCountry } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   const countries = useMemo(() => {
     if (!targetRegion) return [];
@@ -67,8 +69,14 @@ export default function ExploreScreen() {
     }
   };
 
-  const handleChangeRegion = () => {
-    router.push('/target-select');
+  const handleOpenRegionPicker = () => {
+    setShowRegionPicker(true);
+  };
+
+  const handleRegionSelect = async (region: TargetRegion) => {
+    await setTargetRegion(region);
+    await setSelectedCountry(null);
+    setShowRegionPicker(false);
   };
 
   if (!targetRegion) {
@@ -80,10 +88,18 @@ export default function ExploreScreen() {
           <Text style={styles.emptyDescription}>
             Ülkeleri görmek için önce hedef bölgenizi seçin
           </Text>
-          <TouchableOpacity style={styles.selectButton} onPress={handleChangeRegion}>
+          <TouchableOpacity style={styles.selectButton} onPress={handleOpenRegionPicker}>
             <Text style={styles.selectButtonText}>Bölge Seç</Text>
           </TouchableOpacity>
         </View>
+        
+        <RegionPickerModal
+          visible={showRegionPicker}
+          currentRegion={targetRegion}
+          onSelect={handleRegionSelect}
+          onClose={() => setShowRegionPicker(false)}
+          showWarning={false}
+        />
       </SafeAreaView>
     );
   }
@@ -94,10 +110,10 @@ export default function ExploreScreen() {
       <Animated.View entering={FadeIn.delay(100)} style={styles.header}>
         <View>
           <Text style={styles.title}>Ülkeleri Keşfet</Text>
-          <TouchableOpacity style={styles.regionBadge} onPress={handleChangeRegion}>
+          <TouchableOpacity style={styles.regionBadge} onPress={handleOpenRegionPicker}>
             <Text style={styles.regionFlag}>{currentRegion?.flag}</Text>
             <Text style={styles.regionText}>{currentRegion?.nameTr}</Text>
-            <Text style={styles.changeText}>Değiştir</Text>
+            <Text style={styles.changeText}>Değiştir ▼</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.countryCount}>{filteredCountries.length} ülke</Text>
@@ -143,6 +159,15 @@ export default function ExploreScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Region Picker Modal */}
+      <RegionPickerModal
+        visible={showRegionPicker}
+        currentRegion={targetRegion}
+        onSelect={handleRegionSelect}
+        onClose={() => setShowRegionPicker(false)}
+        showWarning={!!selectedCountryId}
+      />
     </SafeAreaView>
   );
 }

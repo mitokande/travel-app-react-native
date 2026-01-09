@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { ProgressCard, EmptyProgressCard } from '@/components/home/ProgressCard';
 import { NewsSection } from '@/components/home/NewsCard';
+import { RegionPickerModal } from '@/components/common/RegionPickerModal';
 import { useApp } from '@/context/AppContext';
 import { useDocumentProgress } from '@/hooks/useStorage';
 import { getCountryById } from '@/data/countries';
@@ -24,12 +25,14 @@ import { getDocumentsByVisaType } from '@/data/documents';
 import { getLatestNews } from '@/data/news';
 import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
 import { targetRegions } from '@/data/countries';
+import { TargetRegion } from '@/types';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { targetRegion, selectedCountryId } = useApp();
+  const { targetRegion, selectedCountryId, setTargetRegion, setSelectedCountry } = useApp();
   const { getCompletedCount } = useDocumentProgress(selectedCountryId);
   const [refreshing, setRefreshing] = useState(false);
+  const [showRegionPicker, setShowRegionPicker] = useState(false);
 
   const selectedCountry = selectedCountryId ? getCountryById(selectedCountryId) : null;
   const documents = selectedCountry
@@ -50,8 +53,15 @@ export default function HomeScreen() {
     router.push('/(tabs)/explore');
   };
 
-  const handleChangeRegion = () => {
-    router.push('/target-select');
+  const handleOpenRegionPicker = () => {
+    setShowRegionPicker(true);
+  };
+
+  const handleRegionSelect = async (region: TargetRegion) => {
+    await setTargetRegion(region);
+    // Reset selected country when changing region
+    await setSelectedCountry(null);
+    setShowRegionPicker(false);
   };
 
   const handleSettings = () => {
@@ -60,7 +70,6 @@ export default function HomeScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate refresh
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setRefreshing(false);
   };
@@ -81,10 +90,11 @@ export default function HomeScreen() {
             <Text style={styles.logo}>PackNDocs</Text>
             <TouchableOpacity
               style={styles.regionBadge}
-              onPress={handleChangeRegion}
+              onPress={handleOpenRegionPicker}
             >
               <Text style={styles.regionFlag}>{currentRegion?.flag || '🌍'}</Text>
               <Text style={styles.regionText}>{currentRegion?.nameTr || 'Seçilmedi'}</Text>
+              <Text style={styles.changeIcon}>▼</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.avatarButton} onPress={handleSettings}>
@@ -136,7 +146,7 @@ export default function HomeScreen() {
               <Text style={styles.actionIcon}>⚙️</Text>
               <Text style={styles.actionText}>Ayarlar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionCard} onPress={handleChangeRegion}>
+            <TouchableOpacity style={styles.actionCard} onPress={handleOpenRegionPicker}>
               <Text style={styles.actionIcon}>🎯</Text>
               <Text style={styles.actionText}>Bölge Değiştir</Text>
             </TouchableOpacity>
@@ -149,6 +159,15 @@ export default function HomeScreen() {
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Region Picker Modal */}
+      <RegionPickerModal
+        visible={showRegionPicker}
+        currentRegion={targetRegion}
+        onSelect={handleRegionSelect}
+        onClose={() => setShowRegionPicker(false)}
+        showWarning={!!selectedCountryId}
+      />
     </SafeAreaView>
   );
 }
@@ -192,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: AppColors.pureWhite,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.medium,
     gap: Spacing.xs,
   },
@@ -205,6 +224,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: AppColors.textSecondary,
     fontWeight: '500',
+  },
+
+  changeIcon: {
+    fontSize: 10,
+    color: AppColors.textMuted,
+    marginLeft: 2,
   },
 
   avatarButton: {
