@@ -1,112 +1,302 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+/**
+ * PackNDocs Explore Page
+ * Browse and select countries for visa applications
+ */
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { CountryGrid } from '@/components/explore/CountryCard';
+import { useApp } from '@/context/AppContext';
+import { getCountriesByRegion, targetRegions } from '@/data/countries';
+import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
+import { Country } from '@/types';
 
-export default function TabTwoScreen() {
+export default function ExploreScreen() {
+  const router = useRouter();
+  const { targetRegion, selectedCountryId, setSelectedCountry } = useApp();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const countries = useMemo(() => {
+    if (!targetRegion) return [];
+    return getCountriesByRegion(targetRegion);
+  }, [targetRegion]);
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery.trim()) return countries;
+    const query = searchQuery.toLowerCase().trim();
+    return countries.filter(
+      (country) =>
+        country.nameTr.toLowerCase().includes(query) ||
+        country.name.toLowerCase().includes(query)
+    );
+  }, [countries, searchQuery]);
+
+  const currentRegion = targetRegions.find((r) => r.id === targetRegion);
+
+  const handleSelectCountry = async (country: Country) => {
+    // If selecting a new country, confirm with user
+    if (selectedCountryId && selectedCountryId !== country.id) {
+      Alert.alert(
+        'Ülke Değişikliği',
+        `${country.nameTr} için yeni bir başvuru başlatmak istediğinizden emin misiniz? Mevcut ilerlemeniz korunacaktır.`,
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Devam Et',
+            onPress: async () => {
+              await setSelectedCountry(country.id);
+              router.push(`/country/${country.id}`);
+            },
+          },
+        ]
+      );
+    } else {
+      await setSelectedCountry(country.id);
+      router.push(`/country/${country.id}`);
+    }
+  };
+
+  const handleChangeRegion = () => {
+    router.push('/target-select');
+  };
+
+  if (!targetRegion) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyIcon}>🎯</Text>
+          <Text style={styles.emptyTitle}>Bölge Seçilmedi</Text>
+          <Text style={styles.emptyDescription}>
+            Ülkeleri görmek için önce hedef bölgenizi seçin
+          </Text>
+          <TouchableOpacity style={styles.selectButton} onPress={handleChangeRegion}>
+            <Text style={styles.selectButtonText}>Bölge Seç</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <Animated.View entering={FadeIn.delay(100)} style={styles.header}>
+        <View>
+          <Text style={styles.title}>Ülkeleri Keşfet</Text>
+          <TouchableOpacity style={styles.regionBadge} onPress={handleChangeRegion}>
+            <Text style={styles.regionFlag}>{currentRegion?.flag}</Text>
+            <Text style={styles.regionText}>{currentRegion?.nameTr}</Text>
+            <Text style={styles.changeText}>Değiştir</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.countryCount}>{filteredCountries.length} ülke</Text>
+      </Animated.View>
+
+      {/* Search */}
+      <Animated.View entering={FadeInDown.delay(150)} style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Ülke ara..."
+            placeholderTextColor={AppColors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Text style={styles.clearIcon}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+
+      {/* Country Grid */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredCountries.length > 0 ? (
+          <CountryGrid
+            countries={filteredCountries}
+            selectedCountryId={selectedCountryId}
+            onSelectCountry={handleSelectCountry}
+          />
+        ) : (
+          <View style={styles.noResults}>
+            <Text style={styles.noResultsIcon}>🔍</Text>
+            <Text style={styles.noResultsText}>
+              "{searchQuery}" için sonuç bulunamadı
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.backgroundSecondary,
   },
-  titleContainer: {
+
+  // Header
+  header: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+
+  regionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+
+  regionFlag: {
+    fontSize: 16,
+  },
+
+  regionText: {
+    fontSize: 14,
+    color: AppColors.textSecondary,
+    fontWeight: '500',
+  },
+
+  changeText: {
+    fontSize: 12,
+    color: AppColors.skyBlue,
+    fontWeight: '600',
+    marginLeft: Spacing.xs,
+  },
+
+  countryCount: {
+    fontSize: 14,
+    color: AppColors.textMuted,
+    fontWeight: '500',
+  },
+
+  // Search
+  searchContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.pureWhite,
+    borderRadius: BorderRadius.medium,
+    paddingHorizontal: Spacing.md,
+    height: 48,
+    gap: Spacing.sm,
+  },
+
+  searchIcon: {
+    fontSize: 18,
+  },
+
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: AppColors.textPrimary,
+  },
+
+  clearIcon: {
+    fontSize: 16,
+    color: AppColors.textMuted,
+    padding: Spacing.xs,
+  },
+
+  // Scroll
+  scrollView: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+
+  // Empty States
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xxl,
+  },
+
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: Spacing.lg,
+  },
+
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+
+  emptyDescription: {
+    fontSize: 15,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+
+  selectButton: {
+    backgroundColor: AppColors.skyBlue,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.medium,
+  },
+
+  selectButtonText: {
+    color: AppColors.pureWhite,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // No Results
+  noResults: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xxxl,
+  },
+
+  noResultsIcon: {
+    fontSize: 48,
+    marginBottom: Spacing.md,
+    opacity: 0.5,
+  },
+
+  noResultsText: {
+    fontSize: 15,
+    color: AppColors.textMuted,
+    textAlign: 'center',
   },
 });

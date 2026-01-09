@@ -1,98 +1,287 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+/**
+ * PackNDocs Home Dashboard
+ * Main landing page showing user progress and news
+ */
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { ProgressCard, EmptyProgressCard } from '@/components/home/ProgressCard';
+import { NewsSection } from '@/components/home/NewsCard';
+import { useApp } from '@/context/AppContext';
+import { useDocumentProgress } from '@/hooks/useStorage';
+import { getCountryById } from '@/data/countries';
+import { getDocumentsByVisaType } from '@/data/documents';
+import { getLatestNews } from '@/data/news';
+import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
+import { targetRegions } from '@/data/countries';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const { targetRegion, selectedCountryId } = useApp();
+  const { getCompletedCount } = useDocumentProgress(selectedCountryId);
+  const [refreshing, setRefreshing] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const selectedCountry = selectedCountryId ? getCountryById(selectedCountryId) : null;
+  const documents = selectedCountry
+    ? getDocumentsByVisaType(selectedCountry.visaType)
+    : [];
+  const completedCount = getCompletedCount();
+  const news = getLatestNews(3);
+
+  const currentRegion = targetRegions.find((r) => r.id === targetRegion);
+
+  const handleContinue = () => {
+    if (selectedCountryId) {
+      router.push(`/country/${selectedCountryId}`);
+    }
+  };
+
+  const handleExplore = () => {
+    router.push('/(tabs)/explore');
+  };
+
+  const handleChangeRegion = () => {
+    router.push('/target-select');
+  };
+
+  const handleSettings = () => {
+    router.push('/settings');
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate refresh
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setRefreshing(false);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Header */}
+        <Animated.View entering={FadeIn.delay(100)} style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.logo}>PackNDocs</Text>
+            <TouchableOpacity
+              style={styles.regionBadge}
+              onPress={handleChangeRegion}
+            >
+              <Text style={styles.regionFlag}>{currentRegion?.flag || '🌍'}</Text>
+              <Text style={styles.regionText}>{currentRegion?.nameTr || 'Seçilmedi'}</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.avatarButton} onPress={handleSettings}>
+            <Text style={styles.avatarText}>👤</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Greeting */}
+        <Animated.View entering={FadeInDown.delay(150)} style={styles.greeting}>
+          <Text style={styles.greetingText}>Merhaba! 👋</Text>
+          <Text style={styles.greetingSubtext}>
+            {selectedCountry
+              ? 'Vize başvurunuzun durumunu takip edin'
+              : 'Vize başvurunuza başlamak için ülke seçin'}
+          </Text>
+        </Animated.View>
+
+        {/* Progress Card */}
+        <View style={styles.progressSection}>
+          {selectedCountry ? (
+            <ProgressCard
+              country={selectedCountry}
+              completedDocs={completedCount}
+              totalDocs={documents.filter((d) => d.required).length}
+              onContinue={handleContinue}
+            />
+          ) : (
+            <EmptyProgressCard onExplore={handleExplore} />
+          )}
+        </View>
+
+        {/* Quick Actions */}
+        <Animated.View entering={FadeInDown.delay(300)} style={styles.quickActions}>
+          <Text style={styles.sectionTitle}>Hızlı İşlemler</Text>
+          <View style={styles.actionsGrid}>
+            <TouchableOpacity style={styles.actionCard} onPress={handleExplore}>
+              <Text style={styles.actionIcon}>🌍</Text>
+              <Text style={styles.actionText}>Ülkeleri Keşfet</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={handleContinue}
+              disabled={!selectedCountry}
+            >
+              <Text style={styles.actionIcon}>📋</Text>
+              <Text style={styles.actionText}>Belgelerim</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard} onPress={handleSettings}>
+              <Text style={styles.actionIcon}>⚙️</Text>
+              <Text style={styles.actionText}>Ayarlar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard} onPress={handleChangeRegion}>
+              <Text style={styles.actionIcon}>🎯</Text>
+              <Text style={styles.actionText}>Bölge Değiştir</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* News Section */}
+        <NewsSection news={news} />
+
+        {/* Bottom Spacing */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.backgroundSecondary,
+  },
+
+  scrollView: {
+    flex: 1,
+  },
+
+  content: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+
+  headerLeft: {
+    gap: Spacing.sm,
+  },
+
+  logo: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: AppColors.skyBlue,
+    letterSpacing: -0.5,
+  },
+
+  regionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: AppColors.pureWhite,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.medium,
+    gap: Spacing.xs,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+
+  regionFlag: {
+    fontSize: 16,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+
+  regionText: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    fontWeight: '500',
+  },
+
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: AppColors.pureWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  avatarText: {
+    fontSize: 22,
+  },
+
+  // Greeting
+  greeting: {
+    marginBottom: Spacing.lg,
+  },
+
+  greetingText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+
+  greetingSubtext: {
+    fontSize: 15,
+    color: AppColors.textSecondary,
+    lineHeight: 22,
+  },
+
+  // Progress
+  progressSection: {
+    marginBottom: Spacing.xl,
+  },
+
+  // Quick Actions
+  quickActions: {
+    marginBottom: Spacing.lg,
+  },
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+
+  actionCard: {
+    width: '48%',
+    backgroundColor: AppColors.pureWhite,
+    borderRadius: BorderRadius.medium,
+    padding: Spacing.md,
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+
+  actionIcon: {
+    fontSize: 28,
+  },
+
+  actionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
+    textAlign: 'center',
+  },
+
+  bottomSpacing: {
+    height: Spacing.xxxl,
   },
 });
