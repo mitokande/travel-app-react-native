@@ -12,16 +12,16 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
-  Linking,
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import * as Sharing from 'expo-sharing';
 import { DocumentList } from '@/components/country/DocumentItem';
 import { useDocumentProgress } from '@/hooks/useStorage';
 import { getCountryById } from '@/data/countries';
 import { getDocumentsByVisaType, getRequiredDocuments } from '@/data/documents';
-import { pickDocument, saveDocument, deleteDocument } from '@/utils/fileUpload';
+import { pickDocument, saveDocument, deleteDocument, getFileInfo } from '@/utils/fileUpload';
 import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
 
 export default function CountryDetailScreen() {
@@ -106,18 +106,32 @@ export default function CountryDetailScreen() {
 
       try {
         if (Platform.OS === 'web') {
-          // On web, try to open the file URI
+          // On web, try to open the file URI in new tab
           window.open(status.uploadedFilePath, '_blank');
         } else {
-          // On mobile, use Linking to open the file
-          const canOpen = await Linking.canOpenURL(status.uploadedFilePath);
-          if (canOpen) {
-            await Linking.openURL(status.uploadedFilePath);
+          // On mobile, check if file exists and use sharing
+          const fileInfo = await getFileInfo(status.uploadedFilePath);
+          
+          if (!fileInfo.exists) {
+            Alert.alert('Hata', 'Dosya bulunamadı');
+            return;
+          }
+
+          // Check if sharing is available
+          const isAvailable = await Sharing.isAvailableAsync();
+          
+          if (isAvailable) {
+            await Sharing.shareAsync(status.uploadedFilePath, {
+              mimeType: getMimeType(status.uploadedFileName || ''),
+              dialogTitle: 'Belgeyi Görüntüle',
+              UTI: getUTI(status.uploadedFileName || ''),
+            });
           } else {
-            Alert.alert('Bilgi', 'Bu dosya türü görüntülenemiyor');
+            Alert.alert('Bilgi', 'Bu cihazda dosya paylaşımı desteklenmiyor');
           }
         }
       } catch (error) {
+        console.error('View document error:', error);
         Alert.alert('Hata', 'Dosya açılırken bir hata oluştu');
       }
     },
@@ -226,6 +240,34 @@ export default function CountryDetailScreen() {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+// Helper function to get MIME type from filename
+function getMimeType(filename: string): string {
+  const extension = filename.split('.').pop()?.toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  };
+  return mimeTypes[extension || ''] || 'application/octet-stream';
+}
+
+// Helper function to get UTI for iOS
+function getUTI(filename: string): string {
+  const extension = filename.split('.').pop()?.toLowerCase();
+  const utis: Record<string, string> = {
+    pdf: 'com.adobe.pdf',
+    jpg: 'public.jpeg',
+    jpeg: 'public.jpeg',
+    png: 'public.png',
+    doc: 'com.microsoft.word.doc',
+    docx: 'org.openxmlformats.wordprocessingml.document',
+  };
+  return utis[extension || ''] || 'public.data';
 }
 
 const styles = StyleSheet.create({
@@ -412,4 +454,3 @@ const styles = StyleSheet.create({
     height: Spacing.xxxl,
   },
 });
-
