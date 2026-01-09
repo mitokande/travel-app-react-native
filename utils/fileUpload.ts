@@ -4,7 +4,8 @@
  */
 
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+// Use legacy API for expo-file-system v54+
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
 // Supported file types
@@ -262,4 +263,3 @@ export async function cleanupOrphanedFiles(
     return 0;
   }
 }
-
