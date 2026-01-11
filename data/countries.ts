@@ -3,7 +3,7 @@
  * All supported countries for visa applications
  */
 
-import { Country, RegionCard } from '@/types';
+import { Country, RegionCard, VisaPurposeOption, TravelTimelineOption } from '@/types';
 
 // Available target regions
 export const targetRegions: RegionCard[] = [
@@ -27,6 +27,78 @@ export const targetRegions: RegionCard[] = [
     nameTr: 'Birleşik Krallık',
     flag: '🇬🇧',
     visaType: 'İngiltere Vizesi',
+  },
+];
+
+// Visa purpose options
+export const visaPurposes: VisaPurposeOption[] = [
+  {
+    id: 'tourist',
+    name: 'Tourist',
+    nameTr: 'Turistik',
+    description: 'Short-term visit for holiday and travel',
+    descriptionTr: 'Tatil ve gezi amaçlı kısa süreli ziyaret',
+    icon: '🏖️',
+  },
+  {
+    id: 'student',
+    name: 'Student',
+    nameTr: 'Öğrenci',
+    description: 'Long-term visa for education and study',
+    descriptionTr: 'Eğitim ve öğrenim amaçlı uzun süreli vize',
+    icon: '🎓',
+  },
+  {
+    id: 'work',
+    name: 'Work',
+    nameTr: 'Çalışma',
+    description: 'Work permit for career and employment',
+    descriptionTr: 'İş ve kariyer amaçlı çalışma izni',
+    icon: '💼',
+  },
+  {
+    id: 'business',
+    name: 'Business',
+    nameTr: 'İş',
+    description: 'Meetings, conferences and commercial visits',
+    descriptionTr: 'Toplantı, konferans ve ticari ziyaret',
+    icon: '🤝',
+  },
+  {
+    id: 'family',
+    name: 'Family',
+    nameTr: 'Aile',
+    description: 'Family visit or reunification',
+    descriptionTr: 'Aile ziyareti veya birleşimi',
+    icon: '👨‍👩‍👧‍👦',
+  },
+];
+
+// Travel timeline options
+export const travelTimelines: TravelTimelineOption[] = [
+  {
+    id: '1_month',
+    name: 'Within 1 month',
+    nameTr: '1 ay içinde',
+    icon: '⚡',
+  },
+  {
+    id: '3_months',
+    name: 'Within 3 months',
+    nameTr: '3 ay içinde',
+    icon: '📅',
+  },
+  {
+    id: '6_months',
+    name: 'Within 6 months',
+    nameTr: '6 ay içinde',
+    icon: '🗓️',
+  },
+  {
+    id: '1_year',
+    name: 'Within 1 year',
+    nameTr: '1 yıl içinde',
+    icon: '📆',
   },
 ];
 
@@ -367,4 +439,3 @@ export function getRegionByCountryId(countryId: string): string | undefined {
   const country = getCountryById(countryId);
   return country?.region;
 }
-

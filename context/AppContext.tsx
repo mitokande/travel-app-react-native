@@ -5,13 +5,15 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TargetRegion } from '@/types';
+import { TargetRegion, VisaPurpose, TravelTimeline } from '@/types';
 
 // Storage keys
 const STORAGE_KEYS = {
   HAS_ONBOARDED: 'packndocs_has_onboarded',
   TARGET_REGION: 'packndocs_target_region',
   SELECTED_COUNTRY: 'packndocs_selected_country',
+  VISA_PURPOSE: 'packndocs_visa_purpose',
+  TRAVEL_TIMELINE: 'packndocs_travel_timeline',
 } as const;
 
 // Context state interface
@@ -19,6 +21,8 @@ interface AppContextState {
   hasOnboarded: boolean;
   targetRegion: TargetRegion | null;
   selectedCountryId: string | null;
+  visaPurpose: VisaPurpose | null;
+  travelTimeline: TravelTimeline | null;
   isLoading: boolean;
 }
 
@@ -27,6 +31,8 @@ interface AppContextActions {
   setHasOnboarded: (value: boolean) => Promise<void>;
   setTargetRegion: (region: TargetRegion | null) => Promise<void>;
   setSelectedCountry: (countryId: string | null) => Promise<void>;
+  setVisaPurpose: (purpose: VisaPurpose | null) => Promise<void>;
+  setTravelTimeline: (timeline: TravelTimeline | null) => Promise<void>;
   clearAllData: () => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -39,6 +45,8 @@ const initialState: AppContextState = {
   hasOnboarded: false,
   targetRegion: null,
   selectedCountryId: null,
+  visaPurpose: null,
+  travelTimeline: null,
   isLoading: true,
 };
 
@@ -59,16 +67,20 @@ export function AppProvider({ children }: AppProviderProps) {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       
-      const [hasOnboarded, targetRegion, selectedCountry] = await Promise.all([
+      const [hasOnboarded, targetRegion, selectedCountry, visaPurpose, travelTimeline] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.HAS_ONBOARDED),
         AsyncStorage.getItem(STORAGE_KEYS.TARGET_REGION),
         AsyncStorage.getItem(STORAGE_KEYS.SELECTED_COUNTRY),
+        AsyncStorage.getItem(STORAGE_KEYS.VISA_PURPOSE),
+        AsyncStorage.getItem(STORAGE_KEYS.TRAVEL_TIMELINE),
       ]);
 
       setState({
         hasOnboarded: hasOnboarded === 'true',
         targetRegion: (targetRegion as TargetRegion) || null,
         selectedCountryId: selectedCountry || null,
+        visaPurpose: (visaPurpose as VisaPurpose) || null,
+        travelTimeline: (travelTimeline as TravelTimeline) || null,
         isLoading: false,
       });
     } catch (error) {
@@ -116,6 +128,32 @@ export function AppProvider({ children }: AppProviderProps) {
     }
   }, []);
 
+  const setVisaPurpose = useCallback(async (purpose: VisaPurpose | null) => {
+    try {
+      if (purpose) {
+        await AsyncStorage.setItem(STORAGE_KEYS.VISA_PURPOSE, purpose);
+      } else {
+        await AsyncStorage.removeItem(STORAGE_KEYS.VISA_PURPOSE);
+      }
+      setState((prev) => ({ ...prev, visaPurpose: purpose }));
+    } catch (error) {
+      console.error('Error saving visa purpose:', error);
+    }
+  }, []);
+
+  const setTravelTimeline = useCallback(async (timeline: TravelTimeline | null) => {
+    try {
+      if (timeline) {
+        await AsyncStorage.setItem(STORAGE_KEYS.TRAVEL_TIMELINE, timeline);
+      } else {
+        await AsyncStorage.removeItem(STORAGE_KEYS.TRAVEL_TIMELINE);
+      }
+      setState((prev) => ({ ...prev, travelTimeline: timeline }));
+    } catch (error) {
+      console.error('Error saving travel timeline:', error);
+    }
+  }, []);
+
   const clearAllData = useCallback(async () => {
     try {
       const keys = await AsyncStorage.getAllKeys();
@@ -132,6 +170,8 @@ export function AppProvider({ children }: AppProviderProps) {
     setHasOnboarded,
     setTargetRegion,
     setSelectedCountry,
+    setVisaPurpose,
+    setTravelTimeline,
     clearAllData,
     reload: loadStoredData,
   };
@@ -149,4 +189,3 @@ export function useApp(): AppContextType {
 }
 
 export default AppContext;
-

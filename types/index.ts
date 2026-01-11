@@ -8,6 +8,12 @@ export type TargetRegion = 'eu' | 'us' | 'gb';
 // Visa types
 export type VisaType = 'schengen' | 'us_visa' | 'uk_visa' | 'eu_visa';
 
+// Visa purpose types
+export type VisaPurpose = 'tourist' | 'student' | 'work' | 'business' | 'family';
+
+// Travel timeline types
+export type TravelTimeline = '1_month' | '3_months' | '6_months' | '1_year';
+
 // Document types
 export type DocumentType = 
   | 'identity' 
@@ -66,6 +72,8 @@ export interface AppState {
   hasOnboarded: boolean;
   targetRegion: TargetRegion | null;
   selectedCountryId: string | null;
+  visaPurpose: VisaPurpose | null;
+  travelTimeline: TravelTimeline | null;
   progress: Record<string, CountryProgress>;
 }
 
@@ -96,3 +104,20 @@ export interface RegionCard {
   visaType: string;
 }
 
+// Visa purpose option interface
+export interface VisaPurposeOption {
+  id: VisaPurpose;
+  name: string;
+  nameTr: string;
+  description: string;
+  descriptionTr: string;
+  icon: string;
+}
+
+// Travel timeline option interface
+export interface TravelTimelineOption {
+  id: TravelTimeline;
+  name: string;
+  nameTr: string;
+  icon: string;
+}
