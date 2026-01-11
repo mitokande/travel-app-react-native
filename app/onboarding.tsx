@@ -30,7 +30,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
-import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
+import { AppColors, TomThumb, BorderRadius, Shadows, Spacing } from '@/constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,9 +41,9 @@ const slides = [
     title: 'Tüm Belgeler Tek Yerde',
     description: 'Vize başvurunuz için gerekli tüm belgeleri tek bir uygulamada takip edin.',
     cards: [
-      { flag: '🇩🇪', country: 'Almanya', type: 'Schengen', color: '#FFE5E5' },
-      { flag: '🇫🇷', country: 'Fransa', type: 'Schengen', color: '#E5F0FF' },
-      { flag: '🇮🇹', country: 'İtalya', type: 'Schengen', color: '#E5FFE5' },
+      { flag: '🇩🇪', country: 'Almanya', type: 'Schengen', color: TomThumb[100] },
+      { flag: '🇫🇷', country: 'Fransa', type: 'Schengen', color: TomThumb[200] },
+      { flag: '🇮🇹', country: 'İtalya', type: 'Schengen', color: TomThumb[100] },
     ],
   },
   {
@@ -52,8 +52,8 @@ const slides = [
     description: 'Hedef ülkenize göre özelleştirilmiş belge listesi ve başvuru rehberi.',
     cards: [
       { flag: '🇺🇸', country: 'ABD', type: 'US Visa', color: '#FFF5E5' },
-      { flag: '🇬🇧', country: 'İngiltere', type: 'UK Visa', color: '#F5E5FF' },
-      { flag: '🇪🇺', country: 'Avrupa Birliği', type: 'Schengen', color: '#E5FFFF' },
+      { flag: '🇬🇧', country: 'İngiltere', type: 'UK Visa', color: TomThumb[100] },
+      { flag: '🇪🇺', country: 'Avrupa Birliği', type: 'Schengen', color: TomThumb[200] },
     ],
   },
   {
@@ -61,9 +61,9 @@ const slides = [
     title: 'İlerlemenizi Takip Edin',
     description: 'Belge hazırlık sürecinizi adım adım takip edin, hiçbir şeyi kaçırmayın.',
     cards: [
-      { flag: '🇪🇸', country: 'İspanya', type: 'Schengen', color: '#FFEBE5' },
-      { flag: '🇳🇱', country: 'Hollanda', type: 'Schengen', color: '#E5EBFF' },
-      { flag: '🇵🇹', country: 'Portekiz', type: 'Schengen', color: '#E5FFEB' },
+      { flag: '🇪🇸', country: 'İspanya', type: 'Schengen', color: TomThumb[200] },
+      { flag: '🇳🇱', country: 'Hollanda', type: 'Schengen', color: TomThumb[100] },
+      { flag: '🇵🇹', country: 'Portekiz', type: 'Schengen', color: TomThumb[200] },
     ],
   },
 ];
@@ -311,7 +311,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0FFF4', // Light mint green
+    backgroundColor: TomThumb[50],
   },
 
   // Background
@@ -323,13 +323,13 @@ const styles = StyleSheet.create({
   blob: {
     position: 'absolute',
     borderRadius: 999,
-    opacity: 0.4,
+    opacity: 0.5,
   },
 
   blob1: {
     width: 300,
     height: 300,
-    backgroundColor: '#BBF7D0',
+    backgroundColor: TomThumb[200],
     top: -50,
     left: -100,
   },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   blob2: {
     width: 250,
     height: 250,
-    backgroundColor: '#A7F3D0',
+    backgroundColor: TomThumb[300],
     top: height * 0.3,
     right: -80,
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   blob3: {
     width: 200,
     height: 200,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: TomThumb[100],
     bottom: 100,
     left: -50,
   },
@@ -373,20 +373,20 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 20,
     fontWeight: '700',
-    color: AppColors.textPrimary,
+    color: TomThumb[800],
   },
 
   skipButton: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: BorderRadius.large,
   },
 
   skipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: AppColors.textSecondary,
+    color: TomThumb[600],
   },
 
   // Slide
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   cardCountry: {
     fontSize: 12,
     fontWeight: '600',
-    color: AppColors.textPrimary,
+    color: TomThumb[800],
     textAlign: 'center',
     marginBottom: Spacing.xs,
   },
@@ -468,20 +468,20 @@ const styles = StyleSheet.create({
   cardCountryMain: {
     fontSize: 15,
     fontWeight: '700',
-    color: AppColors.textPrimary,
+    color: TomThumb[800],
     textAlign: 'center',
     marginBottom: Spacing.sm,
   },
 
   cardBadge: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.small,
   },
 
   cardBadgeMain: {
-    backgroundColor: AppColors.skyBlue,
+    backgroundColor: TomThumb[500],
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
   },
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   cardBadgeText: {
     fontSize: 9,
     fontWeight: '600',
-    color: AppColors.textSecondary,
+    color: TomThumb[600],
   },
 
   cardBadgeTextMain: {
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
 
   cardAction: {
     marginTop: Spacing.sm,
-    backgroundColor: AppColors.textPrimary,
+    backgroundColor: TomThumb[700],
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.medium,
@@ -522,14 +522,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '700',
-    color: AppColors.textPrimary,
+    color: TomThumb[900],
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
 
   description: {
     fontSize: 15,
-    color: AppColors.textSecondary,
+    color: TomThumb[600],
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: Spacing.lg,
@@ -552,19 +552,19 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#94A3B8',
+    backgroundColor: TomThumb[300],
   },
 
   dotActive: {
     width: 24,
-    backgroundColor: AppColors.textPrimary,
+    backgroundColor: TomThumb[700],
   },
 
   nextButton: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: AppColors.textPrimary,
+    backgroundColor: TomThumb[700],
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.medium,

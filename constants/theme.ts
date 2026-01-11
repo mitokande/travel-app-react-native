@@ -1,37 +1,65 @@
 /**
  * PackNDocs Theme Configuration
- * Color palette and design tokens based on PRD specifications
+ * Color palette and design tokens - Tom Thumb Green Theme
  */
 
 import { Platform } from 'react-native';
 
-// PRD Color Palette
+// Tom Thumb Green Palette
+export const TomThumb = {
+  50: '#f5f8f5',
+  100: '#e7f1e9',
+  200: '#d0e2d3',
+  300: '#abcab0',
+  400: '#7eaa86',
+  500: '#5c8b65',
+  600: '#487150',
+  700: '#3a5940',
+  800: '#324937',
+  900: '#2a3d2f',
+  950: '#132016',
+};
+
+// App Color Palette based on Tom Thumb
 export const AppColors = {
-  // Primary Colors
-  royalBlue: '#3C4F50',
-  skyBlue: '#3B82F6',
-  turkishTurquoise: '#14B8A6',
-  amberGold: '#7F8D39',
+  // Primary Colors (Tom Thumb based)
+  primary: TomThumb[600],
+  primaryLight: TomThumb[400],
+  primaryDark: TomThumb[700],
+  
+  // Secondary / Accent
+  secondary: TomThumb[500],
+  accent: TomThumb[400],
+  
+  // Legacy names for compatibility
+  royalBlue: TomThumb[700],
+  skyBlue: TomThumb[500],
+  turkishTurquoise: TomThumb[400],
+  amberGold: '#B8860B', // Keep gold for special accents
   
   // Neutral Colors
-  softGray: '#F3F4F6',
-  slateGray: '#374151',
+  softGray: TomThumb[100],
+  slateGray: TomThumb[800],
   pureWhite: '#FFFFFF',
   
-  // Additional UI Colors
-  error: '#EF4444',
-  success: '#22C55E',
+  // Status Colors
+  error: '#DC2626',
+  success: TomThumb[500],
   warning: '#F59E0B',
   
   // Text Colors
-  textPrimary: '#1F2937',
-  textSecondary: '#6B7280',
-  textMuted: '#9CA3AF',
+  textPrimary: TomThumb[900],
+  textSecondary: TomThumb[600],
+  textMuted: TomThumb[400],
   
   // Background Colors
   backgroundPrimary: '#FFFFFF',
-  backgroundSecondary: '#F9FAFB',
-  backgroundTertiary: '#F3F4F6',
+  backgroundSecondary: TomThumb[50],
+  backgroundTertiary: TomThumb[100],
+  
+  // Card backgrounds
+  cardLight: TomThumb[50],
+  cardAccent: TomThumb[100],
 };
 
 // Border Radius Standards from PRD
@@ -55,35 +83,35 @@ export const Spacing = {
 };
 
 // Light/Dark theme colors for React Navigation
-const tintColorLight = AppColors.skyBlue;
-const tintColorDark = '#fff';
+const tintColorLight = TomThumb[500];
+const tintColorDark = TomThumb[300];
 
 export const Colors = {
   light: {
-    text: AppColors.textPrimary,
-    background: AppColors.backgroundPrimary,
+    text: TomThumb[900],
+    background: '#FFFFFF',
     tint: tintColorLight,
-    icon: AppColors.slateGray,
-    tabIconDefault: AppColors.textSecondary,
+    icon: TomThumb[600],
+    tabIconDefault: TomThumb[400],
     tabIconSelected: tintColorLight,
-    card: AppColors.pureWhite,
-    border: '#E5E7EB',
-    primary: AppColors.skyBlue,
-    secondary: AppColors.turkishTurquoise,
-    accent: AppColors.amberGold,
+    card: '#FFFFFF',
+    border: TomThumb[200],
+    primary: TomThumb[500],
+    secondary: TomThumb[400],
+    accent: TomThumb[600],
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: TomThumb[100],
+    background: TomThumb[950],
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: TomThumb[400],
+    tabIconDefault: TomThumb[500],
     tabIconSelected: tintColorDark,
-    card: '#1E2022',
-    border: '#2D3134',
-    primary: AppColors.skyBlue,
-    secondary: AppColors.turkishTurquoise,
-    accent: AppColors.amberGold,
+    card: TomThumb[900],
+    border: TomThumb[800],
+    primary: TomThumb[400],
+    secondary: TomThumb[500],
+    accent: TomThumb[300],
   },
 };
 
@@ -111,21 +139,21 @@ export const Fonts = Platform.select({
 // Shadow styles
 export const Shadows = {
   small: {
-    shadowColor: '#000',
+    shadowColor: TomThumb[900],
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 1,
   },
   medium: {
-    shadowColor: '#000',
+    shadowColor: TomThumb[900],
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.12,
     shadowRadius: 4,
     elevation: 3,
   },
   large: {
-    shadowColor: '#000',
+    shadowColor: TomThumb[900],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
