@@ -1,6 +1,6 @@
 /**
  * PackNDocs Onboarding Screen
- * 3-page guided introduction to the app
+ * Visual card-based introduction with floating country cards
  */
 
 import React, { useRef, useState } from 'react';
@@ -13,41 +13,184 @@ import {
   NativeSyntheticEvent,
   SafeAreaView,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { OnboardingSlide, PaginationDots } from '@/components/onboarding/OnboardingSlide';
-import { Button } from '@/components/common/Button';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInLeft,
+  FadeInRight,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+} from 'react-native-reanimated';
 import { useApp } from '@/context/AppContext';
-import { AppColors, Spacing } from '@/constants/theme';
-import { OnboardingSlide as SlideData } from '@/types';
+import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Onboarding slides data (Turkish)
-const slides: SlideData[] = [
+// Onboarding slides data
+const slides = [
   {
     id: '1',
     title: 'Tüm Belgeler Tek Yerde',
-    description:
-      'Vize başvurunuz için gerekli tüm belgeleri tek bir uygulamada takip edin ve düzenleyin.',
-    icon: '📋',
+    description: 'Vize başvurunuz için gerekli tüm belgeleri tek bir uygulamada takip edin.',
+    cards: [
+      { flag: '🇩🇪', country: 'Almanya', type: 'Schengen', color: '#FFE5E5' },
+      { flag: '🇫🇷', country: 'Fransa', type: 'Schengen', color: '#E5F0FF' },
+      { flag: '🇮🇹', country: 'İtalya', type: 'Schengen', color: '#E5FFE5' },
+    ],
   },
   {
     id: '2',
     title: 'Kişiselleştirilmiş Rehber',
-    description:
-      'Hedef ülkenize göre özelleştirilmiş belge listesi ve başvuru merkezi önerileri alın.',
-    icon: '🎯',
+    description: 'Hedef ülkenize göre özelleştirilmiş belge listesi ve başvuru rehberi.',
+    cards: [
+      { flag: '🇺🇸', country: 'ABD', type: 'US Visa', color: '#FFF5E5' },
+      { flag: '🇬🇧', country: 'İngiltere', type: 'UK Visa', color: '#F5E5FF' },
+      { flag: '🇪🇺', country: 'Avrupa Birliği', type: 'Schengen', color: '#E5FFFF' },
+    ],
   },
   {
     id: '3',
-    title: 'Takip ve Hatırlatma',
-    description:
-      'Belge hazırlık sürecinizi adım adım takip edin ve hiçbir şeyi kaçırmayın.',
-    icon: '✅',
+    title: 'İlerlemenizi Takip Edin',
+    description: 'Belge hazırlık sürecinizi adım adım takip edin, hiçbir şeyi kaçırmayın.',
+    cards: [
+      { flag: '🇪🇸', country: 'İspanya', type: 'Schengen', color: '#FFEBE5' },
+      { flag: '🇳🇱', country: 'Hollanda', type: 'Schengen', color: '#E5EBFF' },
+      { flag: '🇵🇹', country: 'Portekiz', type: 'Schengen', color: '#E5FFEB' },
+    ],
   },
 ];
+
+interface FloatingCardsProps {
+  cards: typeof slides[0]['cards'];
+  isActive: boolean;
+}
+
+function FloatingCards({ cards, isActive }: FloatingCardsProps) {
+  // Floating animation values
+  const float1 = useSharedValue(0);
+  const float2 = useSharedValue(0);
+  const float3 = useSharedValue(0);
+
+  React.useEffect(() => {
+    if (isActive) {
+      float1.value = withRepeat(
+        withSequence(
+          withTiming(-8, { duration: 2000 }),
+          withTiming(8, { duration: 2000 })
+        ),
+        -1,
+        true
+      );
+      float2.value = withDelay(
+        300,
+        withRepeat(
+          withSequence(
+            withTiming(10, { duration: 2200 }),
+            withTiming(-10, { duration: 2200 })
+          ),
+          -1,
+          true
+        )
+      );
+      float3.value = withDelay(
+        600,
+        withRepeat(
+          withSequence(
+            withTiming(-6, { duration: 1800 }),
+            withTiming(6, { duration: 1800 })
+          ),
+          -1,
+          true
+        )
+      );
+    }
+  }, [isActive]);
+
+  const animatedStyle1 = useAnimatedStyle(() => ({
+    transform: [{ translateY: float1.value }, { rotate: '-8deg' }],
+  }));
+
+  const animatedStyle2 = useAnimatedStyle(() => ({
+    transform: [{ translateY: float2.value }, { rotate: '5deg' }],
+  }));
+
+  const animatedStyle3 = useAnimatedStyle(() => ({
+    transform: [{ translateY: float3.value }, { rotate: '-3deg' }],
+  }));
+
+  return (
+    <View style={styles.cardsContainer}>
+      {/* Left Card */}
+      <Animated.View
+        entering={FadeInLeft.delay(200).duration(600)}
+        style={[styles.floatingCard, styles.cardLeft, animatedStyle1]}
+      >
+        <View style={[styles.cardInner, { backgroundColor: cards[0].color }]}>
+          <Text style={styles.cardFlag}>{cards[0].flag}</Text>
+          <Text style={styles.cardCountry}>{cards[0].country}</Text>
+          <View style={styles.cardBadge}>
+            <Text style={styles.cardBadgeText}>{cards[0].type}</Text>
+          </View>
+        </View>
+      </Animated.View>
+
+      {/* Center Card (Main) */}
+      <Animated.View
+        entering={FadeInUp.delay(100).duration(600)}
+        style={[styles.floatingCard, styles.cardCenter, animatedStyle2]}
+      >
+        <View style={[styles.cardInner, styles.cardInnerMain, { backgroundColor: cards[1].color }]}>
+          <Text style={styles.cardFlagMain}>{cards[1].flag}</Text>
+          <Text style={styles.cardCountryMain}>{cards[1].country}</Text>
+          <View style={[styles.cardBadge, styles.cardBadgeMain]}>
+            <Text style={styles.cardBadgeTextMain}>{cards[1].type}</Text>
+          </View>
+          <View style={styles.cardAction}>
+            <Text style={styles.cardActionText}>Başvur →</Text>
+          </View>
+        </View>
+      </Animated.View>
+
+      {/* Right Card */}
+      <Animated.View
+        entering={FadeInRight.delay(300).duration(600)}
+        style={[styles.floatingCard, styles.cardRight, animatedStyle3]}
+      >
+        <View style={[styles.cardInner, { backgroundColor: cards[2].color }]}>
+          <Text style={styles.cardFlag}>{cards[2].flag}</Text>
+          <Text style={styles.cardCountry}>{cards[2].country}</Text>
+          <View style={styles.cardBadge}>
+            <Text style={styles.cardBadgeText}>{cards[2].type}</Text>
+          </View>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+function PaginationDots({ total, current }: { total: number; current: number }) {
+  return (
+    <View style={styles.dotsContainer}>
+      {Array.from({ length: total }).map((_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.dot,
+            index === current && styles.dotActive,
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -82,12 +225,49 @@ export default function OnboardingScreen() {
 
   const isLastSlide = currentIndex === slides.length - 1;
 
+  const renderSlide = ({ item, index }: { item: typeof slides[0]; index: number }) => (
+    <View style={styles.slide}>
+      {/* Cards Area */}
+      <View style={styles.cardsArea}>
+        <FloatingCards cards={item.cards} isActive={index === currentIndex} />
+      </View>
+
+      {/* Content Area */}
+      <View style={styles.contentArea}>
+        <Animated.Text
+          entering={FadeInDown.delay(400).duration(500)}
+          style={styles.title}
+        >
+          {item.title}
+        </Animated.Text>
+        <Animated.Text
+          entering={FadeInDown.delay(500).duration(500)}
+          style={styles.description}
+        >
+          {item.description}
+        </Animated.Text>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Logo */}
-      <Animated.View entering={FadeIn.delay(200)} style={styles.header}>
-        <Text style={styles.logo}>PackNDocs</Text>
-        <Text style={styles.tagline}>Vize Başvuru Asistanı</Text>
+      {/* Background Pattern */}
+      <View style={styles.backgroundPattern}>
+        <View style={[styles.blob, styles.blob1]} />
+        <View style={[styles.blob, styles.blob2]} />
+        <View style={[styles.blob, styles.blob3]} />
+      </View>
+
+      {/* Header */}
+      <Animated.View entering={FadeIn.delay(100)} style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoIcon}>✈️</Text>
+          <Text style={styles.logoText}>PackNDocs</Text>
+        </View>
+        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+          <Text style={styles.skipText}>Atla</Text>
+        </TouchableOpacity>
       </Animated.View>
 
       {/* Slides */}
@@ -100,9 +280,7 @@ export default function OnboardingScreen() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <OnboardingSlide slide={item} index={index} />
-        )}
+        renderItem={renderSlide}
         getItemLayout={(_, index) => ({
           length: width,
           offset: width * index,
@@ -110,29 +288,21 @@ export default function OnboardingScreen() {
         })}
       />
 
-      {/* Pagination */}
-      <PaginationDots total={slides.length} current={currentIndex} />
+      {/* Footer */}
+      <Animated.View entering={FadeInUp.delay(600)} style={styles.footer}>
+        {/* Pagination */}
+        <PaginationDots total={slides.length} current={currentIndex} />
 
-      {/* Actions */}
-      <Animated.View
-        entering={FadeInUp.delay(400)}
-        style={styles.actionsContainer}
-      >
-        <Button
-          title={isLastSlide ? 'Başlayalım' : 'İleri'}
+        {/* Next Button */}
+        <TouchableOpacity
+          style={styles.nextButton}
           onPress={handleNext}
-          size="large"
-          fullWidth
-        />
-
-        {!isLastSlide && (
-          <Button
-            title="Atla"
-            onPress={handleSkip}
-            variant="ghost"
-            size="medium"
-          />
-        )}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.nextButtonText}>
+            {isLastSlide ? '✓' : '→'}
+          </Text>
+        </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
   );
@@ -141,32 +311,268 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.backgroundPrimary,
+    backgroundColor: '#F0FFF4', // Light mint green
   },
 
+  // Background
+  backgroundPattern: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+
+  blob: {
+    position: 'absolute',
+    borderRadius: 999,
+    opacity: 0.4,
+  },
+
+  blob1: {
+    width: 300,
+    height: 300,
+    backgroundColor: '#BBF7D0',
+    top: -50,
+    left: -100,
+  },
+
+  blob2: {
+    width: 250,
+    height: 250,
+    backgroundColor: '#A7F3D0',
+    top: height * 0.3,
+    right: -80,
+  },
+
+  blob3: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#D1FAE5',
+    bottom: 100,
+    left: -50,
+  },
+
+  // Header
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    zIndex: 10,
   },
 
-  logo: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: AppColors.skyBlue,
-    letterSpacing: -0.5,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
 
-  tagline: {
+  logoIcon: {
+    fontSize: 24,
+  },
+
+  logoText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+  },
+
+  skipButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: BorderRadius.large,
+  },
+
+  skipText: {
     fontSize: 14,
+    fontWeight: '600',
     color: AppColors.textSecondary,
-    marginTop: Spacing.xs,
   },
 
-  actionsContainer: {
-    paddingHorizontal: Spacing.xxl,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.md,
+  // Slide
+  slide: {
+    width,
+    flex: 1,
+  },
+
+  // Cards Area
+  cardsArea: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+  },
+
+  cardsContainer: {
+    width: '100%',
+    height: 280,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  floatingCard: {
+    position: 'absolute',
+    ...Shadows.large,
+  },
+
+  cardLeft: {
+    left: 10,
+    top: 40,
+    zIndex: 1,
+  },
+
+  cardCenter: {
+    zIndex: 3,
+  },
+
+  cardRight: {
+    right: 10,
+    top: 60,
+    zIndex: 2,
+  },
+
+  cardInner: {
+    width: 110,
+    height: 140,
+    borderRadius: BorderRadius.large,
+    padding: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  cardInnerMain: {
+    width: 140,
+    height: 180,
+    padding: Spacing.lg,
+  },
+
+  cardFlag: {
+    fontSize: 36,
+    marginBottom: Spacing.xs,
+  },
+
+  cardFlagMain: {
+    fontSize: 48,
+    marginBottom: Spacing.sm,
+  },
+
+  cardCountry: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+
+  cardCountryMain: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+
+  cardBadge: {
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.small,
+  },
+
+  cardBadgeMain: {
+    backgroundColor: AppColors.skyBlue,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+
+  cardBadgeText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: AppColors.textSecondary,
+  },
+
+  cardBadgeTextMain: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: AppColors.pureWhite,
+  },
+
+  cardAction: {
+    marginTop: Spacing.sm,
+    backgroundColor: AppColors.textPrimary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.medium,
+  },
+
+  cardActionText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: AppColors.pureWhite,
+  },
+
+  // Content Area
+  contentArea: {
+    paddingHorizontal: Spacing.xxl,
+    paddingBottom: Spacing.xl,
+    alignItems: 'center',
+  },
+
+  title: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+
+  description: {
+    fontSize: 15,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: Spacing.lg,
+  },
+
+  // Footer
+  footer: {
+    alignItems: 'center',
+    paddingBottom: Spacing.xxxl,
+    gap: Spacing.xl,
+  },
+
+  dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#94A3B8',
+  },
+
+  dotActive: {
+    width: 24,
+    backgroundColor: AppColors.textPrimary,
+  },
+
+  nextButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: AppColors.textPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadows.medium,
+  },
+
+  nextButtonText: {
+    fontSize: 24,
+    color: AppColors.pureWhite,
+    fontWeight: '600',
   },
 });
