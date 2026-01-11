@@ -208,11 +208,6 @@ export default function SettingsScreen() {
               subtitle="1.0.0 (MVP)"
             />
             <View style={styles.divider} />
-            <SettingItem
-              icon="👨‍💻"
-              title="Geliştirici"
-              subtitle="Mithat Can Turan"
-            />
           </View>
         </Animated.View>
 
