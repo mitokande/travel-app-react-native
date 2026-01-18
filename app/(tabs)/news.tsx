@@ -3,20 +3,20 @@
  * Visa news list with category filtering
  */
 
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { getAllNews, NewsItemFull } from '@/data/news';
 import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
+import { getAllNews, NewsItemFull } from '@/data/news';
+import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import {
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
 
 type NewsCategory = 'all' | 'schengen' | 'us' | 'uk' | 'general';
 
@@ -37,6 +37,7 @@ function CategoryFilter({ selected, onSelect }: CategoryFilterProps) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0 }}
       contentContainerStyle={styles.filterContainer}
     >
       {categories.map((category, index) => (
@@ -113,10 +114,10 @@ function NewsListItem({ news, index, onPress }: NewsListItemProps) {
               {news.category === 'schengen'
                 ? 'Schengen'
                 : news.category === 'us'
-                ? 'ABD'
-                : news.category === 'uk'
-                ? 'İngiltere'
-                : 'Genel'}
+                  ? 'ABD'
+                  : news.category === 'uk'
+                    ? 'İngiltere'
+                    : 'Genel'}
             </Text>
           </View>
         </View>
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   // Filter
   filterContainer: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     gap: Spacing.sm,
   },
 
