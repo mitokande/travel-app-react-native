@@ -3,9 +3,9 @@
  * AsyncStorage wrapper for persistent state management
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, CountryProgress, DocumentStatus, TargetRegion } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback, useEffect, useState } from 'react';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -20,6 +20,8 @@ const initialState: AppState = {
   hasOnboarded: false,
   targetRegion: null,
   selectedCountryId: null,
+  visaPurpose: null,
+  travelTimeline: null,
   progress: {},
 };
 
@@ -47,6 +49,8 @@ export function useAppStorage() {
         hasOnboarded: hasOnboarded === 'true',
         targetRegion: (targetRegion as TargetRegion) || null,
         selectedCountryId: selectedCountry || null,
+        visaPurpose: null, // Loading from storage if needed in future
+        travelTimeline: null, // Loading from storage if needed in future
         progress: {},
       });
     } catch (error) {
@@ -284,6 +288,108 @@ export function useDocumentProgress(countryId: string | null) {
 /**
  * Simple key-value storage helpers
  */
+/**
+ * Uploaded document with country info
+ */
+export interface UploadedDocument extends DocumentStatus {
+  countryId: string;
+  countryName?: string;
+  countryFlag?: string;
+}
+
+/**
+ * Hook to get all uploaded documents across all countries
+ */
+export function useAllUploadedDocuments() {
+  const [documents, setDocuments] = useState<UploadedDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadAllDocuments = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const allKeys = await AsyncStorage.getAllKeys();
+      const progressKeys = allKeys.filter((key) =>
+        key.startsWith(STORAGE_KEYS.PROGRESS_PREFIX)
+      );
+
+      const allDocs: UploadedDocument[] = [];
+
+      for (const key of progressKeys) {
+        const data = await AsyncStorage.getItem(key);
+        if (data) {
+          const progress: CountryProgress = JSON.parse(data);
+          const uploadedDocs = progress.documents.filter(
+            (doc) => doc.uploadedFileName && doc.uploadedFilePath
+          );
+
+          for (const doc of uploadedDocs) {
+            allDocs.push({
+              ...doc,
+              countryId: progress.countryId,
+            });
+          }
+        }
+      }
+
+      // Sort by upload date (newest first)
+      allDocs.sort((a, b) => {
+        const dateA = a.uploadedAt ? new Date(a.uploadedAt).getTime() : 0;
+        const dateB = b.uploadedAt ? new Date(b.uploadedAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      setDocuments(allDocs);
+    } catch (error) {
+      console.error('Error loading all documents:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAllDocuments();
+  }, [loadAllDocuments]);
+
+  const removeDocument = useCallback(
+    async (countryId: string, documentId: string) => {
+      const storageKey = `${STORAGE_KEYS.PROGRESS_PREFIX}${countryId}`;
+
+      try {
+        const data = await AsyncStorage.getItem(storageKey);
+        if (data) {
+          const progress: CountryProgress = JSON.parse(data);
+          const existingIndex = progress.documents.findIndex(
+            (d) => d.documentId === documentId
+          );
+
+          if (existingIndex >= 0) {
+            progress.documents[existingIndex] = {
+              ...progress.documents[existingIndex],
+              completed: false,
+              uploadedFileName: undefined,
+              uploadedFilePath: undefined,
+              uploadedAt: undefined,
+            };
+
+            await AsyncStorage.setItem(storageKey, JSON.stringify(progress));
+            await loadAllDocuments();
+          }
+        }
+      } catch (error) {
+        console.error('Error removing document:', error);
+      }
+    },
+    [loadAllDocuments]
+  );
+
+  return {
+    documents,
+    isLoading,
+    reload: loadAllDocuments,
+    removeDocument,
+  };
+}
+
 export const Storage = {
   async get<T>(key: string): Promise<T | null> {
     try {

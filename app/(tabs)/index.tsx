@@ -3,29 +3,28 @@
  * Main landing page showing user progress and news
  */
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { ProgressCard, EmptyProgressCard } from '@/components/home/ProgressCard';
-import { NewsSection } from '@/components/home/NewsCard';
 import { RegionPickerModal } from '@/components/common/RegionPickerModal';
+import { NewsSection } from '@/components/home/NewsCard';
+import { EmptyProgressCard, ProgressCard } from '@/components/home/ProgressCard';
+import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
 import { useApp } from '@/context/AppContext';
-import { useDocumentProgress } from '@/hooks/useStorage';
-import { getCountryById } from '@/data/countries';
+import { getCountryById, targetRegions } from '@/data/countries';
 import { getDocumentsByVisaType } from '@/data/documents';
 import { getLatestNews } from '@/data/news';
-import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
-import { targetRegions } from '@/data/countries';
+import { useDocumentProgress } from '@/hooks/useStorage';
 import { TargetRegion } from '@/types';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -47,6 +46,10 @@ export default function HomeScreen() {
     if (selectedCountryId) {
       router.push(`/country/${selectedCountryId}`);
     }
+  };
+
+  const handleMyDocuments = () => {
+    router.push('/my-documents');
   };
 
   const handleExplore = () => {
@@ -136,8 +139,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={handleContinue}
-              disabled={!selectedCountry}
+              onPress={handleMyDocuments}
             >
               <Text style={styles.actionIcon}>📋</Text>
               <Text style={styles.actionText}>Belgelerim</Text>
