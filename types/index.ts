@@ -37,6 +37,15 @@ export interface Country {
   image?: string;
   description?: string;
   generalInfo?: string;
+  // Detailed visa info
+  visaFee?: string;
+  processingTime?: string;
+  visaValidity?: string;
+  embassyInfo?: string;
+  tips?: string[];
+  capital?: string;
+  currency?: string;
+  language?: string;
 }
 
 // Document requirement interface

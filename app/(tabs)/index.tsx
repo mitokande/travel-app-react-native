@@ -170,6 +170,7 @@ export default function HomeScreen() {
         onClose={() => setShowRegionPicker(false)}
         showWarning={!!selectedCountryId}
       />
+
     </SafeAreaView>
   );
 }

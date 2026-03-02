@@ -18,8 +18,11 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { CountryGrid } from '@/components/explore/CountryCard';
 import { RegionPickerModal } from '@/components/common/RegionPickerModal';
+import { CountryDetailModal } from '@/components/home/CountryDetailModal';
 import { useApp } from '@/context/AppContext';
 import { getCountriesByRegion, targetRegions } from '@/data/countries';
+import { getDocumentsByVisaType, getRequiredDocuments } from '@/data/documents';
+import { useDocumentProgress } from '@/hooks/useStorage';
 import { AppColors, BorderRadius, Spacing } from '@/constants/theme';
 import { Country, TargetRegion } from '@/types';
 
@@ -28,6 +31,18 @@ export default function ExploreScreen() {
   const { targetRegion, selectedCountryId, setTargetRegion, setSelectedCountry } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [showRegionPicker, setShowRegionPicker] = useState(false);
+  const [showCountryDetail, setShowCountryDetail] = useState(false);
+  const [previewCountry, setPreviewCountry] = useState<Country | null>(null);
+
+  const previewCountryId = previewCountry?.id || null;
+  const { getCompletedCount } = useDocumentProgress(previewCountryId);
+
+  const previewDocs = useMemo(() => {
+    if (!previewCountry) return [];
+    return getRequiredDocuments(previewCountry.visaType);
+  }, [previewCountry]);
+
+  const previewCompletedCount = getCompletedCount();
 
   const countries = useMemo(() => {
     if (!targetRegion) return [];
@@ -46,26 +61,35 @@ export default function ExploreScreen() {
 
   const currentRegion = targetRegions.find((r) => r.id === targetRegion);
 
-  const handleSelectCountry = async (country: Country) => {
-    // If selecting a new country, confirm with user
-    if (selectedCountryId && selectedCountryId !== country.id) {
+  const handleSelectCountry = (country: Country) => {
+    setPreviewCountry(country);
+    setShowCountryDetail(true);
+  };
+
+  const handleCountryDetailContinue = async () => {
+    if (!previewCountry) return;
+
+    // If selecting a different country, confirm
+    if (selectedCountryId && selectedCountryId !== previewCountry.id) {
+      setShowCountryDetail(false);
       Alert.alert(
         'Ülke Değişikliği',
-        `${country.nameTr} için yeni bir başvuru başlatmak istediğinizden emin misiniz? Mevcut ilerlemeniz korunacaktır.`,
+        `${previewCountry.nameTr} için yeni bir başvuru başlatmak istediğinizden emin misiniz? Mevcut ilerlemeniz korunacaktır.`,
         [
           { text: 'İptal', style: 'cancel' },
           {
             text: 'Devam Et',
             onPress: async () => {
-              await setSelectedCountry(country.id);
-              router.push(`/country/${country.id}`);
+              await setSelectedCountry(previewCountry.id);
+              router.push(`/country/${previewCountry.id}`);
             },
           },
         ]
       );
     } else {
-      await setSelectedCountry(country.id);
-      router.push(`/country/${country.id}`);
+      await setSelectedCountry(previewCountry.id);
+      setShowCountryDetail(false);
+      router.push(`/country/${previewCountry.id}`);
     }
   };
 
@@ -168,6 +192,18 @@ export default function ExploreScreen() {
         onClose={() => setShowRegionPicker(false)}
         showWarning={!!selectedCountryId}
       />
+
+      {/* Country Detail Modal */}
+      {previewCountry && (
+        <CountryDetailModal
+          visible={showCountryDetail}
+          country={previewCountry}
+          completedDocs={previewCompletedCount}
+          totalDocs={previewDocs.length}
+          onClose={() => setShowCountryDetail(false)}
+          onContinue={handleCountryDetailContinue}
+        />
+      )}
     </SafeAreaView>
   );
 }
