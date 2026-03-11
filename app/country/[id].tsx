@@ -1,9 +1,9 @@
 /**
  * PackNDocs Country Detail Page
- * Document checklist for visa applications
+ * Document checklist, timeline, appointment & cost estimator
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -18,15 +18,23 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import * as Sharing from 'expo-sharing';
 import { DocumentList } from '@/components/country/DocumentItem';
+import { TimelineView, TimelineOverview } from '@/components/country/TimelineView';
+import { AppointmentPicker } from '@/components/country/AppointmentPicker';
+import { CostEstimator } from '@/components/country/CostEstimator';
 import { useDocumentProgress } from '@/hooks/useStorage';
+import { useAppointment } from '@/hooks/useAppointment';
 import { getCountryById } from '@/data/countries';
 import { getDocumentsByVisaType, getRequiredDocuments } from '@/data/documents';
+import { getTimelineByVisaType, getCostsByVisaType, calculateDeadlines } from '@/data/timeline';
 import { pickDocument, saveDocument, deleteDocument, getFileInfo } from '@/utils/fileUpload';
 import { AppColors, BorderRadius, Shadows, Spacing } from '@/constants/theme';
+
+type DetailTab = 'documents' | 'timeline' | 'costs';
 
 export default function CountryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<DetailTab>('documents');
   const {
     progress,
     getDocumentStatus,
@@ -35,6 +43,7 @@ export default function CountryDetailScreen() {
     removeDocumentFile,
     getCompletedCount,
   } = useDocumentProgress(id || null);
+  const { appointmentDate, setAppointmentDate, clearAppointmentDate } = useAppointment(id || null);
 
   const country = useMemo(() => {
     if (!id) return null;
@@ -222,18 +231,67 @@ export default function CountryDetailScreen() {
           </Animated.View>
         )}
 
-        {/* Document Checklist */}
-        <Animated.View entering={FadeInDown.delay(250)}>
-          <Text style={styles.sectionTitle}>Belge Kontrol Listesi</Text>
-          <DocumentList
-            documents={documents}
-            getStatus={getDocumentStatus}
-            onToggle={handleToggleDocument}
-            onUpload={handleUploadDocument}
-            onView={handleViewDocument}
-            onDelete={handleDeleteDocument}
-          />
+        {/* Tab Switcher */}
+        <Animated.View entering={FadeInDown.delay(250)} style={styles.tabContainer}>
+          {([
+            { key: 'documents' as DetailTab, label: '📄 Belgeler' },
+            { key: 'timeline' as DetailTab, label: '📅 Zaman Çizelgesi' },
+            { key: 'costs' as DetailTab, label: '💰 Maliyetler' },
+          ]).map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+            >
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </Animated.View>
+
+        {/* Tab Content */}
+        {activeTab === 'documents' && (
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <Text style={styles.sectionTitle}>Belge Kontrol Listesi</Text>
+            <DocumentList
+              documents={documents}
+              getStatus={getDocumentStatus}
+              onToggle={handleToggleDocument}
+              onUpload={handleUploadDocument}
+              onView={handleViewDocument}
+              onDelete={handleDeleteDocument}
+            />
+          </Animated.View>
+        )}
+
+        {activeTab === 'timeline' && (
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <AppointmentPicker
+              appointmentDate={appointmentDate}
+              onDateSelect={setAppointmentDate}
+              onClear={clearAppointmentDate}
+            />
+            {appointmentDate ? (
+              <TimelineView
+                steps={calculateDeadlines(country.visaType, appointmentDate)}
+                completedDocumentIds={
+                  documents
+                    .filter((doc) => getDocumentStatus(doc.id)?.completed)
+                    .map((doc) => doc.id)
+                }
+              />
+            ) : (
+              <TimelineOverview steps={getTimelineByVisaType(country.visaType)} />
+            )}
+          </Animated.View>
+        )}
+
+        {activeTab === 'costs' && (
+          <Animated.View entering={FadeInDown.delay(300)}>
+            <CostEstimator costs={getCostsByVisaType(country.visaType)} />
+          </Animated.View>
+        )}
 
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
@@ -407,6 +465,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: AppColors.textSecondary,
     lineHeight: 20,
+  },
+
+  // Tabs
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: AppColors.pureWhite,
+    borderRadius: BorderRadius.large,
+    padding: 4,
+    marginBottom: Spacing.lg,
+    ...Shadows.small,
+  },
+
+  tab: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    borderRadius: BorderRadius.medium,
+  },
+
+  tabActive: {
+    backgroundColor: AppColors.skyBlue,
+  },
+
+  tabText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.textSecondary,
+  },
+
+  tabTextActive: {
+    color: AppColors.pureWhite,
   },
 
   // Section
