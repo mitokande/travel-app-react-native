@@ -214,7 +214,8 @@ const styles = StyleSheet.create({
   stepContent: {
     flex: 1,
     marginLeft: Spacing.md,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    paddingRight: Spacing.xs,
   },
 
   stepContentLast: {
@@ -224,8 +225,9 @@ const styles = StyleSheet.create({
   stepHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
+    alignItems: 'flex-start',
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
 
   stepName: {
@@ -233,7 +235,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: AppColors.textPrimary,
     flex: 1,
-    marginRight: Spacing.sm,
+    flexShrink: 1,
   },
 
   stepNameCompleted: {
@@ -243,13 +245,15 @@ const styles = StyleSheet.create({
   stepDescription: {
     fontSize: 13,
     color: AppColors.textSecondary,
-    lineHeight: 19,
-    marginBottom: Spacing.sm,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
   },
 
   stepMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 2,
   },
 
   metaText: {
@@ -264,10 +268,11 @@ const styles = StyleSheet.create({
   },
 
   deadlineBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.small,
     backgroundColor: AppColors.backgroundTertiary,
+    flexShrink: 0,
   },
 
   deadlineBadgeOverdue: {

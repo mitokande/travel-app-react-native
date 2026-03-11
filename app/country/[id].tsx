@@ -479,8 +479,10 @@ const styles = StyleSheet.create({
 
   tab: {
     flex: 1,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xs,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: BorderRadius.medium,
   },
 
@@ -489,9 +491,10 @@ const styles = StyleSheet.create({
   },
 
   tabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: AppColors.textSecondary,
+    textAlign: 'center',
   },
 
   tabTextActive: {

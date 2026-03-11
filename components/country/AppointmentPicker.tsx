@@ -257,6 +257,7 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.pureWhite,
     borderRadius: BorderRadius.large,
     padding: Spacing.lg,
+    marginBottom: Spacing.lg,
     ...Shadows.medium,
   },
 
